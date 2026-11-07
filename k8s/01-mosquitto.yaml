@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mosquitto-config
+data:
+  mosquitto.conf: |
+    listener 1883
+    allow_anonymous false
+    password_file /mosquitto/config/passwd
+    acl_file /mosquitto/config/acl
+    persistence true
+    persistence_location /mosquitto/data/
+  acl: |
+    # Kredensial agen sensor
+    user edgeuser
+    topic write edge/kel01/+/telemetry
+    topic write edge/kel01/+/status
+    topic read edge/kel01/+/cmd
+
+    # Kredensial koordinator
+    user coorduser
+    topic read edge/kel01/#
+    topic write edge/kel01/+/cmd
+    topic write edge/kel01/coordinator/status
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mosquitto-broker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mosquitto
+  template:
+    metadata:
+      labels:
+        app: mosquitto
+    spec:
+      initContainers:
+        - name: generate-passwd
+          image: eclipse-mosquitto:2.0.18
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              cp /tmp/cfg/mosquitto.conf /mosquitto/config/mosquitto.conf
+              cp /tmp/cfg/acl /mosquitto/config/acl
+              mosquitto_passwd -b -c /mosquitto/config/passwd edgeuser edgepass123
+              mosquitto_passwd -b /mosquitto/config/passwd coorduser coordpass123
+              chown -R mosquitto:mosquitto /mosquitto/config
+          volumeMounts:
+            - name: config-input
+              mountPath: /tmp/cfg
+            - name: config-dir
+              mountPath: /mosquitto/config
+      containers:
+        - name: mosquitto
+          image: eclipse-mosquitto:2.0.18
+          ports:
+            - containerPort: 1883
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+          livenessProbe:
+            tcpSocket:
+              port: 1883
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: 1883
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          volumeMounts:
+            - name: config-dir
+              mountPath: /mosquitto/config
+      volumes:
+        - name: config-input
+          configMap:
+            name: mosquitto-config
+        - name: config-dir
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mosquitto-svc
+spec:
+  selector:
+    app: mosquitto
+  ports:
+    - port: 1883
+      targetPort: 1883
+  type: ClusterIP

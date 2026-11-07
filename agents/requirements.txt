@@ -1,0 +1,3 @@
+paho-mqtt==1.6.1
+adafruit-circuitpython-dht==4.0.3
+RPi.GPIO==0.7.1

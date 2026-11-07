@@ -1,0 +1,189 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: edge-agent-config
+data:
+  GROUP_ID: "kel01"
+  MQTT_HOST: "mosquitto-svc"
+  MQTT_PORT: "1883"
+  TEMP_THRESHOLD: "30.0"
+---
+# 1. AGEN SENSOR 1 (FISIK - Terhubung ke DHT11 di GPIO 4 Raspberry Pi)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-sensor-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-sensor-1
+  template:
+    metadata:
+      labels:
+        app: agent-sensor-1
+    spec:
+      containers:
+        - name: sensor-agent
+          image: local/edge-agent:1.0
+          imagePullPolicy: Never
+          securityContext:
+            privileged: true # Diperlukan agar container dapat membaca /dev/gpiomem & /dev/gpiochip0
+          envFrom:
+            - configMapRef:
+                name: edge-agent-config
+          env:
+            - name: AGENT_ID
+              value: "sensor-1"
+            - name: SENSOR_MODE
+              value: "physical"
+            - name: GPIO_PIN
+              value: "4"
+            - name: MQTT_USER
+              value: "edgeuser"
+            - name: MQTT_PASS
+              value: "edgepass123"
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "150m"
+              memory: "128Mi"
+          livenessProbe:
+            exec:
+              command:
+                [
+                  "python",
+                  "-c",
+                  "import os, time, sys; sys.exit(0 if time.time() - os.path.getmtime('/tmp/healthy') < 10 else 1)",
+                ]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                [
+                  "python",
+                  "-c",
+                  "import os, time, sys; sys.exit(0 if time.time() - os.path.getmtime('/tmp/healthy') < 10 else 1)",
+                ]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# 2. AGEN SENSOR 2 (VIRTUAL - Zona Spasial Tetangga)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-sensor-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-sensor-2
+  template:
+    metadata:
+      labels:
+        app: agent-sensor-2
+    spec:
+      containers:
+        - name: sensor-agent
+          image: local/edge-agent:1.0
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef:
+                name: edge-agent-config
+          env:
+            - name: AGENT_ID
+              value: "sensor-2"
+            - name: SENSOR_MODE
+              value: "virtual"
+            - name: MQTT_USER
+              value: "edgeuser"
+            - name: MQTT_PASS
+              value: "edgepass123"
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "150m"
+              memory: "128Mi"
+          livenessProbe:
+            exec:
+              command:
+                [
+                  "python",
+                  "-c",
+                  "import os, time, sys; sys.exit(0 if time.time() - os.path.getmtime('/tmp/healthy') < 10 else 1)",
+                ]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                [
+                  "python",
+                  "-c",
+                  "import os, time, sys; sys.exit(0 if time.time() - os.path.getmtime('/tmp/healthy') < 10 else 1)",
+                ]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# 3. AGEN KOORDINATOR & LOGGER
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-coordinator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-coordinator
+  template:
+    metadata:
+      labels:
+        app: agent-coordinator
+    spec:
+      containers:
+        - name: coordinator
+          image: local/edge-agent:1.0
+          imagePullPolicy: Never
+          command: ["python", "-u", "coordinator_agent.py"]
+          envFrom:
+            - configMapRef:
+                name: edge-agent-config
+          env:
+            - name: AGENT_ID
+              value: "coordinator"
+            - name: MQTT_USER
+              value: "coorduser"
+            - name: MQTT_PASS
+              value: "coordpass123"
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+          livenessProbe:
+            exec:
+              command:
+                [
+                  "python",
+                  "-c",
+                  "import os, time, sys; sys.exit(0 if time.time() - os.path.getmtime('/tmp/healthy') < 10 else 1)",
+                ]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                [
+                  "python",
+                  "-c",
+                  "import os, time, sys; sys.exit(0 if time.time() - os.path.getmtime('/tmp/healthy') < 10 else 1)",
+                ]
+            initialDelaySeconds: 5
+            periodSeconds: 5
