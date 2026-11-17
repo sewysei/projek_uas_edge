@@ -7,6 +7,7 @@ data:
   MQTT_HOST: "mosquitto-svc"
   MQTT_PORT: "1883"
   TEMP_THRESHOLD: "30.0"
+  COMMAND_TTL_SECONDS: "10.0"
 ---
 # 1. AGEN SENSOR 1 (FISIK - Terhubung ke DHT11 di GPIO 4 Raspberry Pi)
 apiVersion: apps/v1

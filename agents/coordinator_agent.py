@@ -9,6 +9,7 @@ MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 MQTT_USER = os.getenv("MQTT_USER", "coorduser")
 MQTT_PASS = os.getenv("MQTT_PASS", "coordpass123")
 TEMP_THRESHOLD = float(os.getenv("TEMP_THRESHOLD", "30.0"))
+COMMAND_TTL_SECONDS = float(os.getenv("COMMAND_TTL_SECONDS", "10.0"))
 CSV_PATH = os.getenv("CSV_PATH", "/tmp/metrics_log.csv")
 
 TOPIC_SUB_TELEMETRY = f"edge/{GROUP_ID}/+/telemetry"
@@ -40,7 +41,15 @@ def send_cmd(client, target_agent, interval, reason):
     global seq_cmd
     seq_cmd += 1
     cmd_topic = f"edge/{GROUP_ID}/{target_agent}/cmd"
-    payload = {"ts": time.time(), "seq": seq_cmd, "cmd": "SET_INTERVAL", "interval": interval, "reason": reason}
+    sent_at = time.time()
+    payload = {
+        "ts": sent_at,
+        "expires_at": sent_at + COMMAND_TTL_SECONDS,
+        "seq": seq_cmd,
+        "cmd": "SET_INTERVAL",
+        "interval": interval,
+        "reason": reason,
+    }
     client.publish(cmd_topic, json.dumps(payload), qos=1)
 
 def on_connect(client, userdata, flags, rc):

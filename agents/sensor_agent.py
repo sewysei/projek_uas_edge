@@ -12,6 +12,7 @@ MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 MQTT_USER = os.getenv("MQTT_USER", "edgeuser")
 MQTT_PASS = os.getenv("MQTT_PASS", "edgepass123")
 TEMP_THRESHOLD = float(os.getenv("TEMP_THRESHOLD", "30.0"))
+COMMAND_TTL_SECONDS = float(os.getenv("COMMAND_TTL_SECONDS", "10.0"))
 
 TOPIC_TELEMETRY = f"edge/{GROUP_ID}/{AGENT_ID}/telemetry"
 TOPIC_STATUS = f"edge/{GROUP_ID}/{AGENT_ID}/status"
@@ -93,13 +94,20 @@ def on_message(client, userdata, msg):
     try:
         data = json.loads(msg.payload.decode())
         if data.get("cmd") == "SET_INTERVAL":
+            sent_at = float(data.get("ts", time.time()))
+            expires_at = float(data.get("expires_at", sent_at + COMMAND_TTL_SECONDS))
+            if time.time() >= expires_at:
+                log_event("CMD_EXPIRED", "Command SET_INTERVAL sudah kadaluarsa",
+                          {"cmd_seq": data.get("seq"), "expires_at": expires_at})
+                return
+
             new_int = float(data["interval"])
             if new_int != sampling_interval:
                 old_int = sampling_interval
                 sampling_interval = new_int
                 log_event("ACT_CMD_APPLIED", f"Interval diubah {old_int}s -> {sampling_interval}s",
                           {"reason": data.get("reason"), "cmd_seq": data.get("seq"),
-                           "cmd_latency_ms": round((time.time() - data.get("ts", time.time())) * 1000, 2)})
+                           "cmd_latency_ms": round((time.time() - sent_at) * 1000, 2)})
     except Exception as e:
         log_event("CMD_ERROR", str(e))
 

@@ -86,6 +86,9 @@ sudo k3s kubectl exec -it deploy/mosquitto-broker -- \
 
 Heartbeat agent dikirim setiap 1 detik. Telemetri normal dikirim setiap 5 detik
 dan dapat berubah menjadi 1 detik ketika suhu mencapai ambang `30.0°C`.
+Command `SET_INTERVAL` memiliki batas waktu 10 detik (`COMMAND_TTL_SECONDS`).
+Sensor akan menolak command yang diterima setelah waktu kedaluwarsa tersebut.
+Nilai ini dapat diubah pada ConfigMap Kubernetes, misalnya menjadi `"5.0"`.
 
 ### 10. Uji gangguan broker dan buffering
 
