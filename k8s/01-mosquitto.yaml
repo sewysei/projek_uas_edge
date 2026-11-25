@@ -95,4 +95,5 @@ spec:
   ports:
     - port: 1883
       targetPort: 1883
-  type: ClusterIP
+      nodePort: 31883
+  type: NodePort
