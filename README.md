@@ -79,10 +79,10 @@ sudo k3s kubectl logs <nama-pod>
 
 ### 9. Pantau telemetri dan heartbeat
 
-Buka terminal baru, lalu subscribe ke seluruh topic pada kelompok `kel01`:
+Buka terminal baru, lalu subscribe ke seluruh topic pada kelompok `kel03`:
 
 sudo k3s kubectl exec -it deploy/mosquitto-broker -- \
- mosquitto_sub -u coorduser -P coordpass123 -t 'edge/kel01/#' -v
+ mosquitto_sub -u coorduser -P coordpass123 -t 'edge/kel03/#' -v
 
 Heartbeat agent dikirim setiap 1 detik. Telemetri normal dikirim setiap 5 detik
 dan dapat berubah menjadi 1 detik ketika suhu mencapai ambang `30.0°C`.

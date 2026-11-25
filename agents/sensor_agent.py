@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 
 # Konfigurasi dari Environment Variables (ConfigMap/Deployment)
-GROUP_ID = os.getenv("GROUP_ID", "kel01")
+GROUP_ID = os.getenv("GROUP_ID", "kel03")
 AGENT_ID = os.getenv("AGENT_ID", "sensor-1")
 SENSOR_MODE = os.getenv("SENSOR_MODE", "physical")  # "physical" atau "virtual"
 GPIO_PIN = int(os.getenv("GPIO_PIN", "4"))          # Pin BCM 4 (Pin Fisik 7)

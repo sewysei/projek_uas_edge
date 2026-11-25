@@ -13,15 +13,15 @@ data:
   acl: |
     # Kredensial agen sensor
     user edgeuser
-    topic write edge/kel01/+/telemetry
-    topic write edge/kel01/+/status
-    topic read edge/kel01/+/cmd
+    topic write edge/kel03/+/telemetry
+    topic write edge/kel03/+/status
+    topic read edge/kel03/+/cmd
 
     # Kredensial koordinator
     user coorduser
-    topic read edge/kel01/#
-    topic write edge/kel01/+/cmd
-    topic write edge/kel01/coordinator/status
+    topic read edge/kel03/#
+    topic write edge/kel03/+/cmd
+    topic write edge/kel03/coordinator/status
 ---
 apiVersion: apps/v1
 kind: Deployment

@@ -2,7 +2,7 @@ import os, time, json, csv, threading
 from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 
-GROUP_ID = os.getenv("GROUP_ID", "kel01")
+GROUP_ID = os.getenv("GROUP_ID", "kel03")
 AGENT_ID = os.getenv("AGENT_ID", "coordinator")
 MQTT_HOST = os.getenv("MQTT_HOST", "mosquitto-svc")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))

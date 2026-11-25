@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: edge-agent-config
 data:
-  GROUP_ID: "kel01"
+  GROUP_ID: "kel03"
   MQTT_HOST: "mosquitto-svc"
   MQTT_PORT: "1883"
   TEMP_THRESHOLD: "30.0"
